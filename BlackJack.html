@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script> <!-- Подключение lodash -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script> <!-- Подключение Howler.js -->
+    <title>Игра Блэкджек</title>
+    <style>
+        /* Общие стили */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a1a1a, #3b3b3b);
+            color: #ecf0f1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .ad-banner {
+            background: rgba(50, 50, 50, 0.8);
+            border-radius: 10px;
+            padding: 10px;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            text-align: center;
+            width: 150px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .ad-banner h2 {
+            color: #1abc9c;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .ad-banner p {
+            color: #ecf0f1;
+            font-size: 14px;
+        }
+
+        .ad-image {
+            width: 100%;
+            height: auto;
+            margin-bottom: 5px;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+
+        .heading {
+            font-size: 36px;
+            color: #1abc9c;
+            text-shadow: 0 0 20px rgba(26, 188, 156, 0.7);
+            margin-bottom: 20px;
+        }
+
+        /* Стили для карт */
+        .cards {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            width: 75px;
+            height: 100px;
+            background-size: cover;
+            background-repeat: no-repeat;
+            margin: 0 5px;
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: scale(1.1);
+        }
+
+        /* Элементы управления */
+        .controls {
+            margin: 20px 0;
+
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #e67e22;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            background: #d35400;
+        }
+
+        /* Стили для сообщения и валюты */
+        .message {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .currency-area input {
+            width: 60%;
+            padding: 5px;
+            margin: 10px 0;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+        }
+
+        /* Адаптивные стили */
+        @media (max-width: 600px) {
+            .card {
+                width: 60px;
+                height: 85px;
+            }
+
+            button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
+            .ad-banner {
+                width: 130px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ad-banner">
+        <img src="lox.jpg" alt="Реклама" class="ad-image">
+        <h2>300м от вас</h2>
+        <p>Плаки Плаки Щовэль</p>
+    </div>
+
+    <div class="container">
+        <h1 class="heading">Блэкджек</h1>
+        <div class="difficulty-toggle">
+            <label for="difficulty">Сложность:</label>
+            <select id="difficulty">
+                <option value="easy">Легкий</option>
+                <option value="medium">Средний</option>
+                <option value="hard">Сложный</option>
+            </select>
+        </div>
+        <div class="currency-area">
+            <h2>Бюджет: <span id="dublins">10000 руб.</span></h2>
+            <input type="number" id="bet" placeholder="Ставка" min="1" max="100">
+        </div>
+        <div class="game-area">
+            <div class="player-area">
+                <h2>Ваши карты:</h2>
+                <div id="player-cards" class="cards"></div>
+                <div id="player-score" class="score">Счет: 0</div>
+            </div>
+            <div class="dealer-area">
+                <h2>Бюджет Дилера:</h2>
+                <div id="dealer-cards" class="cards"></div>
+                <div id="dealer-score" class="score">Счет: 0</div>
+            </div>
+        </div>
+        <div class="controls">
+            <button id="hit-btn">Взять монеты</button>
+            <button id="stand-btn">Остановиться</button>
+            <button id="new-game-btn">Новая игра</button>
+        </div>
+        <div id="message" class="message"></div>
+    </div>
+
+    <!-- Звуковые эффекты -->
+    <audio id="hit-sound" src="sounds/hit.mp3" preload="auto"></audio>
+    <audio id="win-sound" src="sounds/win.mp3" preload="auto"></audio>
+    <audio id="lose-sound" src="sounds/lose.mp3" preload="auto"></audio>
+
+    <script>
+        const soundEffects = {
+            hit: new Howl({ src: ['sounds/hit.mp3'] }),
+            win: new Howl({ src: ['sounds/win.mp3'] }),
+            lose: new Howl({ src: ['sounds/lose.mp3'] }),
+        };
+
+        const playerCards = [];
+        const dealerCards = [];
+        let playerScore = 0;
+        let dealerScore = 0;
+        let gameActive = false;
+        let dublins = parseInt(localStorage.getItem('dublins')) || 10000;
+
+        const playerCardsDiv = $("#player-cards");
+        const dealerCardsDiv = $("#dealer-cards");
+        const playerScoreDiv = $("#player-score");
+
+        const dealerScoreDiv = $("#dealer-score");
+        const messageDiv = $("#message");
+        const dublinsDiv = $("#dublins");
+        const betInput = $("#bet");
+        const difficultySelect = $("#difficulty");
+
+        const cardImages = [
+            "images/1.png", "images/2.png", "images/3.png", "images/4.png",
+            "images/5.png", "images/6.png", "images/7.png", "images/8.png",
+            "images/9.png", "images/10.png"
+        ];
+
+        let dealerStandAt = 17;
+
+        difficultySelect.on("change", function () {
+            dealerStandAt = $(this).val() === "easy" ? 16 : $(this).val() === "medium" ? 17 : 18;
+        });
+
+        $("#hit-btn").on("click", function () {
+            if (gameActive) {
+                let cardIndex = drawCard();
+                playerCards.push(cardIndex);
+                updatePlayerScore(cardIndex);
+            }
+        });
+
+        $("#stand-btn").on("click", function () {
+            if (gameActive) {
+                dealerPlay();
+            }
+        });
+
+        $("#new-game-btn").on("click", startNewGame);
+
+        function drawCard() {
+            return Math.floor(Math.random() * 10);
+        }
+
+        function updatePlayerScore(cardIndex) {
+            const cardDiv = $("<div class='card animate__animated animate__fadeIn'></div>");
+            cardDiv.css("background-image", `url(${cardImages[cardIndex]})`);
+            playerCardsDiv.append(cardDiv);
+
+            playerScore += (cardIndex + 1);
+            playerScoreDiv.text(`Счет: ${playerScore}`);
+
+            if (playerScore > 21) {
+                endGame("Вы проиграли!", false);
+            } else {
+                soundEffects.hit.play();
+            }
+        }
+
+        function dealerPlay() {
+            while (dealerScore < dealerStandAt) {
+                const cardIndex = drawCard();
+                dealerCards.push(cardIndex);
+                dealerScore = dealerCards.reduce((total, card) => total + (card + 1), 0);
+                const cardDiv = $("<div class='card animate__animated animate__fadeIn'></div>");
+                cardDiv.css("background-image", `url(${cardImages[cardIndex]})`);
+                dealerCardsDiv.append(cardDiv);
+            }
+
+            dealerScoreDiv.text(`Счет: ${dealerScore}`);
+            calculateWinner();
+        }
+
+        function calculateWinner() {
+            if (dealerScore > 21 || playerScore > dealerScore) {
+                endGame("Вы выиграли!", true);
+            } else if (playerScore < dealerScore) {
+                endGame("Вы проиграли!", false);
+            } else {
+                endGame("Ничья!", null);
+            }
+        }
+
+        function endGame(message, isWin) {
+            gameActive = false;
+            messageDiv.text(message);
+
+            const betAmount = parseInt(betInput.val()) || 0;
+
+            if (isWin === true) {
+                dublins += betAmount;
+                soundEffects.win.play();
+            } else if (isWin === false) {
+                dublins -= betAmount;
+                soundEffects.lose.play();
+            }
+
+            dublinsDiv.text(`Бюджет: ${dublins} руб.`);
+            localStorage.setItem('dublins', dublins);
+        }
+
+        function startNewGame() {
+            playerCards.length = 0;
+            dealerCards.length = 0;
+            playerScore = 0;
+            dealerScore = 0;
+            gameActive = true;
+
+            playerCardsDiv.empty();
+            dealerCardsDiv.empty();
+            playerScoreDiv.text(`Счет: ${playerScore}`);
+            dealerScoreDiv.text(`Счет: ${dealerScore}`);
+            messageDiv.text('');
+
+            playerCards.push(drawCard());
+
+            playerCards.push(drawCard());
+            dealerCards.push(drawCard());
+            dealerCards.push(drawCard());
+
+            updatePlayerScore(playerCards[0]);
+            updatePlayerScore(playerCards[1]);
+            dealerScoreDiv.text(`Счет: ${dealerCards[0] + 1} + ?`);
+
+            betInput.val('');
+        }
+
+        dublinsDiv.text(`Бюджет: ${dublins} руб.`);
+    </script>
+</body>
+
+</html>
+
